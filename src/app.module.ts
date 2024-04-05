@@ -33,7 +33,7 @@ import { PaymentsModule } from './payments/payments.module';
         ssl: process.env.STAGE === 'prod',
         extra: {
           ssl: process.env.STAGE === 'prod'
-          ? { rejectUnathorized: false }
+          ? { rejectUnauthorized: false }
           : null
         },
         type: 'postgres',
