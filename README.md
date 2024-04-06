@@ -23,3 +23,8 @@ docker-compose up -d
 6. Fill in the environment variables in the .env file ```.env```
 
 7. Run the application  ```npm run start:dev```
+
+# Swagger documentation
+
+```http://localhost:port/api```
+
