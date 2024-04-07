@@ -26,7 +26,7 @@ export class UploadController {
   @Post('health-document/:dni')
   @Auth( ValidRoles.admin, ValidRoles.superUser )
   @UseInterceptors( FileInterceptor( 'file' ) )
-async uploadFile(
+async uploadHealthFile(
     @UploadedFile(
       new ParseFilePipe({
         validators: [
