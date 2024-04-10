@@ -6,7 +6,8 @@ import {
   PasswordResetSaveDto, 
   PasswordResetDto, 
   LoginUserDto, 
-  UpdateUserDto 
+  UpdateUserDto,
+  ResendEmailDto, 
 } from './dto/index';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -18,6 +19,8 @@ import { EmailService } from 'src/common/services/email.service';
 import { substractTime } from 'src/common/functions/substract-dates';
 import { tokenGenerator } from './functions/temp-password.function';
 import { sumTime } from 'src/common/functions/endDate';
+import { ConfigService } from '@nestjs/config';
+
 
 
 
@@ -25,6 +28,8 @@ import { sumTime } from 'src/common/functions/endDate';
 export class AuthService {
 
   constructor (
+
+    private configService: ConfigService,
 
     private emailService: EmailService,
 
@@ -55,13 +60,15 @@ export class AuthService {
 
     } )
 
+    const url: string = `${this.configService.get('APP_DOMAIN')}/auth/verify-email?emailToken=${emailToken}`; 
+
     try {
 
       await this.userRepository.save( user );
 
       await this.emailService.sendEmail( user.email, 
-        'Sign up token', 
-        `Your email verification token is: ${emailToken}` );
+        'Sign up ulr', 
+        `url: ${url}` );
 
     return {
 
@@ -122,9 +129,11 @@ async verifyEmail ( verifyEmailDto: VerifyEmailDto ) {
 
   const { emailToken } = verifyEmailDto;
 
-  const user: User = await this.userRepository.findOneBy( { emailToken } );
+  const user: User = await this.findUserEmailToken( emailToken );
 
   if  ( !user ) throw new NotFoundException( 'Token not found' );
+
+  if ( user.isVerified ) throw new BadRequestException( 'This user is verified. Please sign in' );
 
   const isValidToken = substractTime.substractHours( user.tokenDateExp );
 
@@ -190,9 +199,7 @@ async emailUpdateSave ( verifyEmailDto: VerifyEmailDto  ) {
 
   const { emailToken } = verifyEmailDto;
 
-  const user: User = await this.userRepository.findOneBy( { emailToken } );
-
-  if  ( !user ) throw new NotFoundException( 'Token not valid' );
+  const user: User = await this.findUserEmailToken( emailToken );
 
   const isValidToken = substractTime.substractHours( user.tokenDateExp );
 
@@ -338,6 +345,52 @@ async passwordResetSave ( passwordResetSaveDto: PasswordResetSaveDto ) {
   
   }
 
+
+  async resendEmailUrlVerification ( resendEmailDto: ResendEmailDto ): Promise<Object> {
+
+    const { email } = resendEmailDto;
+
+    const user: User = await this.userRepository.findOneBy( { email } );
+
+    if ( !user ) throw new NotFoundException( 'Email not found');
+
+    if ( user.isVerified ) throw new BadRequestException( 'Your email is verified. Please sign in' );
+
+    const emailToken = tokenGenerator();
+    const currentDate = new Date();
+
+    user.emailToken = emailToken;
+    user.tokenDateExp = sumTime.sumHours( currentDate, 24 );
+
+    await this.userRepository.save( user );
+
+    const url: string = `${this.configService.get('APP_DOMAIN')}/auth/verify-email?emailToken=${emailToken}`; 
+
+    await this.emailService.sendEmail( user.email, 
+        'Sign up ulr', 
+        `url: ${url}` );
+
+    return {
+
+      message: "Your token has been sent",
+
+    }
+  }
+  
+
+private async findUserEmailToken ( emailToken: string ): Promise<User> {
+
+    const user: User = await this.userRepository.findOneBy( { emailToken } );
+
+    if( !user ) throw new NotFoundException( 'email not found' );
+
+
+    return user;
+
 }
+
+}
+
+
 
 

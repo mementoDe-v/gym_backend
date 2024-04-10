@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Patch } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Get, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { 
   CreateUserDto, 
@@ -7,13 +7,14 @@ import {
   PasswordResetSaveDto,
   PasswordResetDto,
   LoginUserDto,
-  UpdateUserDto
+  UpdateUserDto,
+  ResendEmailDto
   } from './dto/index';
 import { GetUser } from './decorators/get-user.decorator';
 import { User } from './entities/user.entity';
 import { Auth } from './decorators';
 import { ValidRoles } from './interfaces';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 
 
@@ -75,8 +76,8 @@ export class AuthController {
     } )
   @ApiResponse( { status: 400, description: 'Bad request' } )
 
-  @Patch('verify-email')
-  async verifyEmail ( @Body() verifyEmailDto: VerifyEmailDto, ) {
+  @Get('verify-email')
+  async verifyEmail ( @Query() verifyEmailDto: VerifyEmailDto, ) {
     return this.authService.verifyEmail( verifyEmailDto );
   }
 
@@ -197,6 +198,15 @@ export class AuthController {
   passwordResetSave (
     @Body() passwordResetSaveDto: PasswordResetSaveDto) {
       return this.authService.passwordResetSave( passwordResetSaveDto );
+    }
+
+
+
+    @Post('verify-email/resend')
+    reresendEmailUrlVerification(  @Body() resendEmailDto:ResendEmailDto ) {
+
+    return this.authService.resendEmailUrlVerification( resendEmailDto );
+
     }
 
 }
