@@ -201,6 +201,22 @@ export class AuthController {
     }
 
 
+    @ApiOperation({ 
+      summary: 'Resend email token',
+      description: 'This enpoint resend the email token verification',
+        
+    })
+
+    @ApiResponse( { 
+      status: 201, 
+      description: 'Token sent',
+      schema: {
+        example: {
+          message: "Your token has been sent",
+        }
+      }
+    } )
+  @ApiResponse( { status: 400, description: 'Bad request' } )
 
     @Post('verify-email/resend')
     reresendEmailUrlVerification(  @Body() resendEmailDto:ResendEmailDto ) {
